@@ -3,10 +3,24 @@ import axios from 'axios';
 import DataTable,{TableColumn} from 'react-data-table-component';
 
   interface IPost {
-    id: number;
-    userId: number;
-    title: string;
-    body: string;
+        start_date: string;
+        end_date: string;
+        leave_days: number;
+        reason: string;
+        staff_member_id: number;
+        first_name: string;
+        last_name: string;
+        type: string;
+        created_at: Date;
+        updated_at: Date;
+
+  }
+
+  interface ErrorResponse {
+    success: false;
+    data: {
+      message: string;
+    };
   }
 
   const defaultPosts:IPost[] = [];
@@ -18,34 +32,43 @@ import DataTable,{TableColumn} from 'react-data-table-component';
         const [error, setError]: [string, (error: string) => void] = React.useState("");
         const columns: TableColumn<IPost>[] = [
             {
-                name: 'Id',
-                selector: row => row.id,
+                name: 'Staff',
+                selector: row => row.last_name,
             },
             {
-                name: 'userId',
-                selector: row => row.userId,
+                name: 'Start Date',
+                selector: row => row.start_date,
                 sortable: true,
             },
             {
-                name: 'title',
-                selector: row => row.title,
+                name: 'End Date',
+                selector: row => row.end_date,
                 sortable: true,
             },
             {
-                name: 'body',
-                selector: row => row.body,
+                name: 'Leave Days',
+                selector: row => row.leave_days,
             },
+            {
+                name: 'Type',
+                selector: row => row.type,
+            },
+            {
+                name: 'Reason',
+                selector: row => row.reason,
+            }
         ];
 
         React.useEffect(() => {
             axios
-                .get<IPost[]>("https://jsonplaceholder.typicode.com/posts", {
+                .get<IPost[]>("http://localhost/api/v1/leave", {
                     headers: {
+                      "x-api-key":'12345678',
                       "Content-Type": "application/json"
                     },
                 })
                 .then(response => {
-                    setPosts(response.data);
+                    setPosts(response.data.data);
                     setLoading(false);
                 })
                 .catch(ex => {

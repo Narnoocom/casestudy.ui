@@ -28,6 +28,7 @@ function App() {
 
   const selectedRow = (r) => {
     setEditRow(r);
+    console.info('31',r)
     openDrawer();
   }
 

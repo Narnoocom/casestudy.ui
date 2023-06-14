@@ -10,23 +10,38 @@ import { useForm, SubmitHandler } from "react-hook-form"
 
 
 export default function Drawer({show,data,onToggleDrawer}) {
+  
+  interface RowItem {
+    start_date: string;
+    end_date: string;
+    leave_days: number;
+    reason: string;
+    staff_member_id: number;
+    first_name: string;
+    last_name: string;
+    type: string;
+    created_at: Date;
+    updated_at: Date;
+  }
 
   const [open, setOpen] = useState(true);
-  const [rowData, setData] = useState('');
+  const [RowItem, setData] = useState(data);
   const [startDate, setStartDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(null);
-
-  interface RowItem {
-    id: number;
-    userId: number;
-    title: string;
-    body: string;
-  }
+  const [endDate, setEndDate] = useState(new Date());
+  const [reasonComment, setReason] = useState('');
+  const [reasonType, setType] = useState('');
+  
 
   React.useEffect(() => {
     setOpen(show)
     setData(data)
+    setStartDate(new Date(data.start_date))
+    setEndDate(new Date(data.end_date))
+    setReason(data.reason)
+    setType(data.type)
   }, [show,data]);
+
+  console.info('reason',reasonComment)
 
   const onChange = (dates) => {
     const [start, end] = dates;
@@ -49,8 +64,8 @@ export default function Drawer({show,data,onToggleDrawer}) {
     //Form submission happens here
     axios.post('https://jsonplaceholder.typicode.com/users', { responseBody })
     .then(res=>{
-      console.log(res);
-      console.log(res.data);
+      console.log('67',res);
+      console.log('68',res.data);
       
     })
   
@@ -120,6 +135,7 @@ export default function Drawer({show,data,onToggleDrawer}) {
                                 id="reasonType"
                                 className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:max-w-xs sm:text-sm sm:leading-6"
                                 {...register("reasonType", { required: true})}
+                                value={reasonType}
                               >
                                 <option value="1">Sick</option>
                                 <option value="2">Unhappy</option>
@@ -162,7 +178,7 @@ export default function Drawer({show,data,onToggleDrawer}) {
                                 rows={3}
                                 id="reason"
                                 className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                defaultValue={''}
+                                value={reasonComment}
                                 {...register("reason", { required: true, maxLength: 50 })}
                               />
                               {errors.reason && <span className='text-sm text-gray-500'>This field is required</span>}
