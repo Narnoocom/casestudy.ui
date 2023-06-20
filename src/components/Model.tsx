@@ -5,6 +5,7 @@ import { Dialog, Transition } from '@headlessui/react'
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm, SubmitHandler } from "react-hook-form"
+import { XCircleIcon } from '@heroicons/react/20/solid'
 
 interface IPost {
     id: number;
@@ -13,16 +14,22 @@ interface IPost {
     body: string;
   }
 
-export default function Model({show,onToggleModel}) {
+
+
+export default function Model({show,staff,leave,onToggleModel,reloadTable}) {
 
   //Sets the state of the model - set to false and we will set it ourselves
   const [open, setOpen] = useState(show);
   const [startDate, setStartDate] = useState(new Date());
   const [endDate, setEndDate] = useState(null);
+  const [error, setError]: [string, (error: string) => void] = React.useState("");
+
+  
 
   React.useEffect(() => {
     setOpen(show)
   }, [show]);
+
 
   const cancelButtonRef = useRef(null)
 
@@ -36,25 +43,47 @@ export default function Model({show,onToggleModel}) {
     interface formDataType {staffMember:string, reasonType: string, reason: string, startDate:Date, endDate:Date | null};
     const responseBody: formDataType = {staffMember: "", reasonType: "", reason: "", startDate: startDate, endDate:endDate}
 
+    const headers = {
+      "x-api-key":'12345678',
+      "Content-Type": "application/json"
+    };
 
     const { register,handleSubmit,formState: { errors } } = useForm<formDataType>();
 
     const onSubmit: SubmitHandler<formDataType> = (data) => {
       
-      responseBody['staffMember'] = data.staffMember;
-      responseBody['reasonType'] = data.reasonType;
+      responseBody['staffMemberId'] = data.staffMember;
+      responseBody['leaveTypeManagerId'] = data.reasonType;
       responseBody['reason'] = data.reason;
       responseBody['startDate'] = startDate;
       responseBody['endDate'] = endDate;
       
       //Form submission happens here
-      axios.post('https://jsonplaceholder.typicode.com/users', { responseBody })
-      .then(res=>{
-        console.log(res);
-        console.log(res.data);
-        
+      axios.post('http://localhost/api/v1/leave', responseBody, { 
+        headers: headers 
       })
+      .then(res=>{
+        processResponse(res);
+      })
+      .catch(ex => {
+        const error =
+        ex.response.status === 404
+            ? "Resource Not found"
+            : "An unexpected error has occurred";
+        setError(error);
+    });
     
+    }
+
+    const processResponse = (response) => {
+
+      if(!response.data.success){
+        setError(response.data.error)
+      }else{
+        reloadTable();
+        onToggleModel();
+      } 
+
     }
 
  
@@ -86,7 +115,18 @@ export default function Model({show,onToggleModel}) {
             >
               <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-xl sm:p-6">
                 <div>
-                  
+                  {error &&
+                  <div className="rounded-md bg-red-50 p-4">
+                  <div className="flex">
+                    <div className="flex-shrink-0">
+                      <XCircleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
+                    </div>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-red-800">{error}</h3>
+                      </div>
+                    </div>
+                  </div>
+                  }
                   <div className="mt-3 text-center sm:mt-5">
                     <Dialog.Title as="h3" className="text-base font-semibold leading-6 text-gray-900">
                       Record Leave 
@@ -113,9 +153,9 @@ export default function Model({show,onToggleModel}) {
                                 {...register("staffMember", { required: true})}
                               >
                                 <option></option>
-                                <option value="1">United States</option>
-                                <option value="2">Canada</option>
-                                <option value="3">Mexico</option>
+                                {staff.map((e, key) => {
+                                    return <option key={key} value={e.id}>{e.first_name} {e.last_name}</option>;
+                                })}
                               </select>
                               {errors.staffMember && <span className='text-sm text-gray-500'>This field is required</span>}
                             </div>
@@ -132,9 +172,9 @@ export default function Model({show,onToggleModel}) {
                                 {...register("reasonType", { required: true})}
                               >
                                 <option></option>
-                                <option value="1">Sick</option>
-                                <option value="2">Unhappy</option>
-                                <option value="3">Whatever</option>
+                                {leave.map((e, key) => {
+                                    return <option key={key} value={e.id}>{e.label}</option>;
+                                })}
                               </select>
                               {errors.reasonType && <span className='text-sm text-gray-500'>This field is required</span>}
                             </div>

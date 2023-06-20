@@ -6,10 +6,11 @@ import { XMarkIcon } from '@heroicons/react/24/outline';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm, SubmitHandler } from "react-hook-form"
+import { XCircleIcon } from '@heroicons/react/20/solid'
 
 
 
-export default function Drawer({show,data,onToggleDrawer}) {
+export default function Drawer({show,data,leave,onToggleDrawer,reloadTable}) {
   
   interface RowItem {
     start_date: string;
@@ -22,37 +23,48 @@ export default function Drawer({show,data,onToggleDrawer}) {
     type: string;
     created_at: Date;
     updated_at: Date;
+    leave_manager_id:number;
   }
 
   const [open, setOpen] = useState(true);
-  const [RowItem, setData] = useState(data);
-  const [startDate, setStartDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(new Date());
-  const [reasonComment, setReason] = useState('');
-  const [reasonType, setType] = useState('');
+  const [startDate, setStartDate] = useState(new Date(data.start_date));
+  const [endDate, setEndDate] = useState(new Date(data.end_date));
+  const [reasonComment, setReason] = useState(data.reason);
+  const [reasonType, setType] = useState(data.type);
+  const [reasonTypeId, setReasonTypeId] = useState(data.type_manager_id);
+  const [leaveManagerId, setleaveManagerId] = useState(data.leave_manager_id);
   
+  console.info('reason',reasonComment)
 
   React.useEffect(() => {
     setOpen(show)
-    setData(data)
-    setStartDate(new Date(data.start_date))
-    setEndDate(new Date(data.end_date))
-    setReason(data.reason)
-    setType(data.type)
-  }, [show,data]);
-
-  console.info('reason',reasonComment)
-
+   // setStartDate(new Date(data.start_date))
+   // setEndDate(new Date(data.end_date))
+    //setReason(data.reason)
+    //setType(data.type)
+  }, [show]);
+ 
   const onChange = (dates) => {
     const [start, end] = dates;
     setStartDate(start);
     setEndDate(end);
   };
 
-  interface formDataType {staffMember:string, reasonType: string, reason: string, startDate:Date, endDate:Date | null};
-  const responseBody: formDataType = {staffMember: "", reasonType: "", reason: "", startDate: startDate, endDate:endDate};
+  const closeDrawer = () => {
+    //setReason('');
+    //setType('');
+    onToggleDrawer();
+  }
+
+  interface formDataType {reasonType: string, reason: string, startDate:Date, endDate:Date | null, leaveManagerId:number};
+  const responseBody: formDataType = {reasonType: "", reason: "", startDate: startDate, endDate:endDate, leaveManagerId: leaveManagerId};
+  const [error, setError]: [string, (error: string) => void] = React.useState("");
 
   const { register,handleSubmit,formState: { errors } } = useForm<formDataType>();
+  const headers = {
+    "x-api-key":'12345678',
+    "Content-Type": "application/json"
+  };
 
   const onSubmit: SubmitHandler<formDataType> = (data) => {
     
@@ -60,21 +72,41 @@ export default function Drawer({show,data,onToggleDrawer}) {
     responseBody['reason'] = data.reason;
     responseBody['startDate'] = startDate;
     responseBody['endDate'] = endDate;
+    responseBody['leaveManagerId'] =  leaveManagerId;
     
     //Form submission happens here
-    axios.post('https://jsonplaceholder.typicode.com/users', { responseBody })
-    .then(res=>{
-      console.log('67',res);
-      console.log('68',res.data);
-      
+    //Form submission happens here
+    axios.put('http://localhost/api/v1/leave', responseBody, { 
+      headers: headers 
     })
+    .then(res=>{
+      processResponse(res);
+    })
+    .catch(ex => {
+      const error =
+      ex.response.status === 404
+          ? "Resource Not found"
+          : "An unexpected error has occurred";
+      setError(error);
+  });
   
+  }
+
+  const processResponse = (response) => {
+
+    if(!response.data.success){
+      setError(response.data.error)
+    }else{
+      reloadTable();
+      onToggleDrawer();
+    } 
+
   }
 
 
   return (
     <Transition.Root show={open} as={Fragment}>
-      <Dialog as="div" className="relative z-10" onClose={setOpen}>
+      <Dialog as="div" className="relative z-10" onClose={onToggleDrawer}>
         <div className="fixed inset-0" />
 
         <div className="fixed inset-0 overflow-hidden">
@@ -109,7 +141,7 @@ export default function Drawer({show,data,onToggleDrawer}) {
                             <button
                               type="button"
                               className="text-gray-400 hover:text-gray-500"
-                              onClick={() => onToggleDrawer()}
+                              onClick={() => closeDrawer()}
                             >
                               <span className="sr-only">Close panel</span>
                               <XMarkIcon className="h-6 w-6" aria-hidden="true" />
@@ -120,7 +152,18 @@ export default function Drawer({show,data,onToggleDrawer}) {
 
                       
                       <div className="space-y-6 py-6 sm:space-y-0 sm:divide-y sm:divide-gray-200 sm:py-0">
-                        
+                      {error &&
+                        <div className="rounded-md bg-red-50 p-4">
+                        <div className="flex">
+                          <div className="flex-shrink-0">
+                            <XCircleIcon className="h-5 w-5 text-red-400" aria-hidden="true" />
+                          </div>
+                          <div className="ml-3">
+                            <h3 className="text-sm font-medium text-red-800">{error}</h3>
+                            </div>
+                          </div>
+                        </div>
+                        }
                         <div className="space-y-2 px-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:space-y-0 sm:px-6 sm:py-5">
                           <div>
                             <label
@@ -134,12 +177,12 @@ export default function Drawer({show,data,onToggleDrawer}) {
                           <select
                                 id="reasonType"
                                 className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:ring-2 focus:ring-inset focus:ring-blue-600 sm:max-w-xs sm:text-sm sm:leading-6"
-                                {...register("reasonType", { required: true})}
-                                value={reasonType}
+                                {...register("reasonType")}
+                                defaultValue={reasonTypeId}
                               >
-                                <option value="1">Sick</option>
-                                <option value="2">Unhappy</option>
-                                <option value="3">Whatever</option>
+                                {leave.map((e, key) => {
+                                    return <option key={key} value={e.id}>{e.label}</option>;
+                                })}
                               </select>
                               {errors.reasonType && <span className='text-sm text-gray-500'>This field is required</span>}
                           </div>
@@ -178,8 +221,8 @@ export default function Drawer({show,data,onToggleDrawer}) {
                                 rows={3}
                                 id="reason"
                                 className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                                value={reasonComment}
-                                {...register("reason", { required: true, maxLength: 50 })}
+                                placeholder={reasonComment}
+                                {...register("reason", { maxLength: 50 })}
                               />
                               {errors.reason && <span className='text-sm text-gray-500'>This field is required</span>}
                           </div>
@@ -194,7 +237,7 @@ export default function Drawer({show,data,onToggleDrawer}) {
                         <button
                           type="button"
                           className="rounded-md bg-white px-3 py-2 text-sm font-semibold text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-                          onClick={() => onToggleDrawer()}
+                          onClick={() => closeDrawer()}
                         >
                           Cancel
                         </button>

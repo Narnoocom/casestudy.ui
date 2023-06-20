@@ -14,7 +14,6 @@ import DataTable,{TableColumn} from 'react-data-table-component';
         created_at: Date;
         updated_at: Date;
         type_manager_id: number;
-        leave_manager_id: number;
 
   }
 
@@ -27,14 +26,11 @@ import DataTable,{TableColumn} from 'react-data-table-component';
 
   const defaultPosts:IPost[] = [];
 
-  const Datatable = ({reload,clickedData}) => {
+  const Datatable = ({rows, clickedData}) => {
 
-        const [posts, setPosts]: [IPost[], (posts: IPost[]) => void] = React.useState(defaultPosts);
+        const [posts, setPosts]: [IPost[], (posts: IPost[]) => void] = React.useState(rows);
         const [loading, setLoading]: [boolean, (loading: boolean) => void] = React.useState<boolean>(true);
         const [error, setError]: [string, (error: string) => void] = React.useState("");
-        const [reloadData, setReloadData]: [boolean, (loading: boolean) => void] = React.useState<boolean>(reload);
-
-
         const columns: TableColumn<IPost>[] = [
             {
                 name: 'Staff',
@@ -65,8 +61,7 @@ import DataTable,{TableColumn} from 'react-data-table-component';
         ];
 
         React.useEffect(() => {
-            if(reload){
-                axios
+            axios
                 .get("http://localhost/api/v1/leave", {
                     headers: {
                       "x-api-key":'12345678',
@@ -85,8 +80,7 @@ import DataTable,{TableColumn} from 'react-data-table-component';
                     setError(error);
                     setLoading(false);
                 });
-            }
-        }, [reload]);
+        }, [rows]);
         
         // Handle the row click
         const handleClick = (r:IPost) => {
