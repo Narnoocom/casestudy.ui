@@ -1,6 +1,7 @@
 import React from 'react';
 import axios from 'axios';
 import DataTable,{TableColumn} from 'react-data-table-component';
+import Tablefilters from './Tablefilters';
 
   interface IPost {
         start_date: string;
@@ -33,6 +34,8 @@ import DataTable,{TableColumn} from 'react-data-table-component';
         const [loading, setLoading]: [boolean, (loading: boolean) => void] = React.useState<boolean>(true);
         const [error, setError]: [string, (error: string) => void] = React.useState("");
         const [reloadData, setReloadData]: [boolean, (loading: boolean) => void] = React.useState<boolean>(reload);
+        const [searchTerm, setSearchTerm]: [string, (searchTerm: string) => void] = React.useState("");
+        const [searchStart, setSearchStart]: [string, (searchTerm: string) => void] = React.useState("");
 
 
         const columns: TableColumn<IPost>[] = [
@@ -92,15 +95,52 @@ import DataTable,{TableColumn} from 'react-data-table-component';
         const handleClick = (r:IPost) => {
             clickedData(r);
         };
+
+        const filterNames = (e) => {
+            if(e.length > 1){
+                setSearchTerm(e);
+            }else{
+                setSearchTerm('');
+            }
+            
+        }
+
+        const filterStartDates = (e) => {
+            if(e.length > 1){
+                setSearchStart(e);
+            }else{
+                setSearchStart('');
+            }
+            
+        }
         
         return (
+            <div>
+            <Tablefilters 
+            filterName={filterNames}
+            filterStartDate = {filterStartDates}
+            />
             <DataTable
                 columns={columns}
-                data={posts}
+                //data={posts}
+                data={posts.filter((item) => {
+                    if (searchTerm === "" && searchStart === "" ) {
+                      return item;
+                    } else if (searchTerm && searchStart === "" ) {
+                      item.last_name.toLowerCase().includes(searchTerm.toLowerCase());
+                    } else if (searchStart) {
+                        item.start_date.includes(searchStart)
+                    } else {
+                        return item;
+                    }
+                    
+                  })}
                 pagination
                 responsive
                 onRowClicked={handleClick}
+                
             />
+            </div>
           );
 
          

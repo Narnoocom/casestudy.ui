@@ -204,10 +204,10 @@ export default function Model({show,staff,leave,onToggleModel,reloadTable}) {
                                 id="reason"
                                 className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                                 defaultValue={''}
-                                {...register("reason", { required: true})}
+                                {...register("reason", { required: true, maxLength: 50 })}
                               />
                             </div>
-                            {errors.reason && <span className='text-sm text-gray-500'>This field is required</span>}
+                            {errors.reason && <span className='text-sm text-gray-500'>This field is required and must be under 50 characters</span>}
                           </div>
 
                           <div className="col-span-full">

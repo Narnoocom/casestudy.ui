@@ -127,7 +127,7 @@ export default function Drawer({show,data,leave,onToggleDrawer,reloadTable}) {
                   className="flex h-full flex-col overflow-y-scroll bg-white shadow-xl">
                     <div className="flex-1">
                       
-                      <div className="bg-gray-50 px-4 py-6 sm:px-6">
+                      <div className="bg-gray-200 px-4 py-6 sm:px-6">
                         <div className="flex items-start justify-between space-x-3">
                           <div className="space-y-1">
                             <Dialog.Title className="text-base font-semibold leading-6 text-gray-900">
