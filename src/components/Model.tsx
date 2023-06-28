@@ -1,28 +1,36 @@
-import React from 'react'
-import { Fragment, useRef, useState } from 'react'
+import React, { Fragment, useRef, useState, useEffect } from 'react';
 import axios from 'axios';
 import { Dialog, Transition } from '@headlessui/react'
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm, SubmitHandler } from "react-hook-form"
 import { XCircleIcon } from '@heroicons/react/20/solid'
+import Period from './Period';
 
-interface IPost {
-    id: number;
-    userId: number;
-    title: string;
-    body: string;
-  }
+interface ModelProps {
+  show: boolean;
+  staff: any[];
+  leave: any[];
+  onToggleModel: () => void;
+  reloadTable: () => void;
+}
+
+interface FormDataType {
+  staffMember: string;
+  reasonType: string;
+  reason: string;
+  startDate: Date;
+  endDate: Date | null;
+}
 
 
-
-export default function Model({show,staff,leave,onToggleModel,reloadTable}) {
+export default function Model({show,staff,leave,onToggleModel,reloadTable}: ModelProps) {
 
   //Sets the state of the model - set to false and we will set it ourselves
   const [open, setOpen] = useState(show);
   const [startDate, setStartDate] = useState(new Date());
-  const [endDate, setEndDate] = useState(null);
-  const [error, setError]: [string, (error: string) => void] = React.useState("");
+  const [endDate, setEndDate] = useState<Date | null>(null);
+  const [error, setError] = useState<string>("");
 
   
 
@@ -33,24 +41,31 @@ export default function Model({show,staff,leave,onToggleModel,reloadTable}) {
 
   const cancelButtonRef = useRef(null)
 
-  const onChange = (dates) => {
-    const [start, end] = dates;
-    setStartDate(start);
-    setEndDate(end);
+  const onChange = (dates: [Date, Date] | null) => {
+    if (dates) {
+      const [start, end] = dates;
+      setStartDate(start);
+      setEndDate(end);
+    }
   };
 
 
-    interface formDataType {staffMember:string, reasonType: string, reason: string, startDate:Date, endDate:Date | null};
-    const responseBody: formDataType = {staffMember: "", reasonType: "", reason: "", startDate: startDate, endDate:endDate}
+  const responseBody: FormDataType = {
+    staffMember: "",
+    reasonType: "",
+    reason: "",
+    startDate: startDate,
+    endDate: endDate
+  };
 
     const headers = {
-      "x-api-key":'12345678',
+      "x-api-key":import.meta.env.VITE_API_KEY,
       "Content-Type": "application/json"
     };
 
-    const { register,handleSubmit,formState: { errors } } = useForm<formDataType>();
+    const { register, handleSubmit, formState: { errors } } = useForm<FormDataType>();
 
-    const onSubmit: SubmitHandler<formDataType> = (data) => {
+    const onSubmit: SubmitHandler<FormDataType> = (data) => {
       
       responseBody['staffMemberId'] = data.staffMember;
       responseBody['leaveTypeManagerId'] = data.reasonType;
@@ -59,7 +74,7 @@ export default function Model({show,staff,leave,onToggleModel,reloadTable}) {
       responseBody['endDate'] = endDate;
       
       //Form submission happens here
-      axios.post('http://localhost/api/v1/leave', responseBody, { 
+      axios.post(import.meta.env.VITE_BACKEND_API+'v1/leave', responseBody, { 
         headers: headers 
       })
       .then(res=>{
@@ -75,7 +90,7 @@ export default function Model({show,staff,leave,onToggleModel,reloadTable}) {
     
     }
 
-    const processResponse = (response) => {
+    const processResponse = (response: any) => {
 
       if(!response.data.success){
         setError(response.data.error)
@@ -192,6 +207,10 @@ export default function Model({show,staff,leave,onToggleModel,reloadTable}) {
                             inline
                             onChange={onChange}/>
                             </div>
+                            <Period 
+                            start={startDate}
+                            end={endDate}
+                            />
                           </div>
 
                           <div className="col-span-full">
@@ -226,7 +245,7 @@ export default function Model({show,staff,leave,onToggleModel,reloadTable}) {
                     </div>
                   </div>
                 </div>
-                <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+                <div className="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense col-span-full">
                   
                   <button
                     type="button"

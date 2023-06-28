@@ -1,5 +1,4 @@
-import React from 'react'
-import { useState } from 'react'
+import React, { useState, useEffect } from 'react';
 import './App.css'
 import Datatable from './components/Datatable'
 import Model from './components/Model'
@@ -17,26 +16,41 @@ interface LeaveTypesData {
   label: string;
 }
 
+interface RowItem {
+  start_date: string;
+  end_date: string;
+  leave_days: number;
+  reason: string;
+  staff_member_id: number;
+  first_name: string;
+  last_name: string;
+  type: string;
+  created_at: Date;
+  updated_at: Date;
+  leave_manager_id: number;
+  type_manager_id: number;
+}
+
 const defaultStaff:StaffData[] = [];
 const defaultSLeaveTypes:LeaveTypesData[] = [];
 
 function App() {
 
 
-  const [isOpen, setIsOpen] = useState(false);
-  const [isOpenDrawer, setIsOpenDrawer] = useState(false);
-  const [editRow, setEditRow] = useState('');
-  const [error, setError]: [string, (error: string) => void] = React.useState("");
-  const [staff, setStaff]: [StaffData[], (staff: StaffData[]) => void] = React.useState(defaultStaff);
-  const [leaveTypes, setleaveTypes]: [LeaveTypesData[], (staff: LeaveTypesData[]) => void] = React.useState(defaultSLeaveTypes);
-  const [dataReload, setdataReload] = useState(true);
+  const [isOpen, setIsOpen] = useState<boolean>(false);
+  const [isOpenDrawer, setIsOpenDrawer] = useState<boolean>(false);
+  const [editRow, setEditRow] = useState<RowItem | null>(null);
+  const [error, setError] = useState<string>("");
+  const [staff, setStaff] = useState<StaffData[]>(defaultStaff);
+  const [leaveTypes, setleaveTypes] = useState<LeaveTypesData[]>(defaultSLeaveTypes);
+  const [dataReload, setdataReload] = useState<boolean>(true);
 
   
-  React.useEffect(() => {
+  useEffect(() => {
     axios
-        .get("http://localhost/api/v1/employees", {
+        .get(import.meta.env.VITE_BACKEND_API+"v1/employees", {
             headers: {
-              "x-api-key":'12345678',
+              "x-api-key":import.meta.env.VITE_API_KEY,
               "Content-Type": "application/json"
             },
         })
@@ -53,9 +67,9 @@ function App() {
         });
 
         axios
-        .get("http://localhost/api/v1/leave-types", {
+        .get(import.meta.env.VITE_BACKEND_API+"v1/leave-types", {
             headers: {
-              "x-api-key":'12345678',
+              "x-api-key":import.meta.env.VITE_API_KEY,
               "Content-Type": "application/json"
             },
         })
@@ -92,12 +106,11 @@ function App() {
 
   const toggleDrawer = () => {
     setIsOpenDrawer(false);
-    setEditRow('');
+    setEditRow(null);
   }
 
-  const selectedRow = (r) => {
+  const selectedRow = (r:RowItem) => {
     setEditRow(r);
-    console.info('r',r)
     openDrawer();
   }
 
@@ -107,7 +120,7 @@ function App() {
       <h1 className="text-3xl font-bold underline text-center">Leave Manager!</h1>
       <button 
       className="mt-4 mb-7 inline-flex w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 sm:col-start-2"
-      onClick={openModal}>Open Model
+      onClick={openModal}>Record Leave
       </button>
       {isOpen === true &&
       <Model
@@ -118,7 +131,7 @@ function App() {
         reloadTable={reloadTableData}
       />
       }
-      {isOpenDrawer === true &&
+      {isOpenDrawer === true && editRow &&
       <Drawer
         show={isOpenDrawer}
         data={editRow}

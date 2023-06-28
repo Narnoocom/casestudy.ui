@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import DataTable,{TableColumn} from 'react-data-table-component';
 import Tablefilters from './Tablefilters';
+import format from 'date-fns/format';
 
   interface IPost {
         start_date: string;
@@ -28,46 +29,67 @@ import Tablefilters from './Tablefilters';
 
   const defaultPosts:IPost[] = [];
 
-  const Datatable = ({reload,clickedData}) => {
+  export default function Datatable ({reload,clickedData}) {
 
-        const [posts, setPosts]: [IPost[], (posts: IPost[]) => void] = React.useState(defaultPosts);
-        const [loading, setLoading]: [boolean, (loading: boolean) => void] = React.useState<boolean>(true);
-        const [error, setError]: [string, (error: string) => void] = React.useState("");
-        const [reloadData, setReloadData]: [boolean, (loading: boolean) => void] = React.useState<boolean>(reload);
-        const [searchTerm, setSearchTerm]: [string, (searchTerm: string) => void] = React.useState("");
-        const [searchStart, setSearchStart]: [string, (searchTerm: string) => void] = React.useState("");
+    const [posts, setPosts] = useState<IPost[]>(defaultPosts);
+    const [loading, setLoading] = useState<boolean>(true);
+    const [error, setError] = useState<string>("");
+    const [searchTerm, setSearchTerm] = useState<string>("");
+    const [searchStart, setSearchStart] = useState<string>("");
+    const [searchEnd, setSearchEnd] = useState<string>("");
+
+        const customStyles = {
+            rows: {
+                style: {
+                    cursor: 'pointer',
+                },
+            }
+        }
 
 
         const columns: TableColumn<IPost>[] = [
             {
-                name: 'Staff',
+                name: 'First Name',
+                maxWidth:'150px',
+                selector: row => row.first_name,
+            },
+            {
+                name: 'Last Name',
+                maxWidth:'150px',
                 selector: row => row.last_name,
             },
             {
                 name: 'Start Date',
+                maxWidth:'120px',
                 selector: row => row.start_date,
                 sortable: true,
             },
             {
                 name: 'End Date',
+                maxWidth:'120px',
                 selector: row => row.end_date,
                 sortable: true,
             },
             {
                 name: 'Leave Days',
+                maxWidth:'50px',
+                center:true,
                 selector: row => row.leave_days,
             },
             {
                 name: 'Type',
+                maxWidth:'150px',
                 selector: row => row.type,
             },
             {
                 name: 'Reason',
+                wrap:true,
+                minWidth:'300px',
                 selector: row => row.reason,
             }
         ];
 
-        React.useEffect(() => {
+        useEffect(() => {
             if(reload){
                 axios
                 .get("http://localhost/api/v1/leave", {
@@ -96,48 +118,66 @@ import Tablefilters from './Tablefilters';
             clickedData(r);
         };
 
-        const filterNames = (e) => {
+        const filterNames = (e:string) => {
+            
             if(e.length > 1){
+              
                 setSearchTerm(e);
+                
             }else{
                 setSearchTerm('');
             }
             
         }
 
-        const filterStartDates = (e) => {
-            if(e.length > 1){
-                setSearchStart(e);
+        const filterStartDates = (e:Date) => {
+            if(e){
+                setSearchStart( format(e,'yyyy-MM-dd') );
             }else{
                 setSearchStart('');
+            }
+          
+            
+        }
+
+        const filterEndDates = (e:Date) => {
+            if(e){
+                setSearchEnd( format(e,'yyyy-MM-dd') );
+            }else{
+                setSearchEnd('');
             }
             
         }
         
         return (
-            <div>
+            <div className='border'>
             <Tablefilters 
             filterName={filterNames}
             filterStartDate = {filterStartDates}
+            filterEndDate = {filterEndDates}
             />
             <DataTable
                 columns={columns}
-                //data={posts}
                 data={posts.filter((item) => {
-                    if (searchTerm === "" && searchStart === "" ) {
+
+                    if (searchTerm === "" && searchStart === "" && searchEnd === "" ) {
                       return item;
-                    } else if (searchTerm && searchStart === "" ) {
-                      item.last_name.toLowerCase().includes(searchTerm.toLowerCase());
+                    } else if (searchTerm && searchStart === "" && searchEnd === "" ) {
+                        return item.last_name.toLowerCase().includes(searchTerm.toLowerCase());
                     } else if (searchStart) {
-                        item.start_date.includes(searchStart)
+                        return item.start_date.includes(searchStart)
+                    }else if (searchEnd) {
+                        return item.end_date.includes(searchEnd)
                     } else {
                         return item;
                     }
                     
                   })}
+                  
                 pagination
                 responsive
                 onRowClicked={handleClick}
+                customStyles={customStyles}
                 
             />
             </div>
@@ -147,5 +187,3 @@ import Tablefilters from './Tablefilters';
 
 
   };
-
-  export default Datatable;

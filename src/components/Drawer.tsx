@@ -1,82 +1,89 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Fragment, useState } from 'react';
+import { Fragment } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
-import { XMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, XCircleIcon } from '@heroicons/react/24/outline';
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { useForm, SubmitHandler } from "react-hook-form"
-import { XCircleIcon } from '@heroicons/react/20/solid'
+import Period from './Period';
 
+interface RowItem {
+  start_date: string;
+  end_date: string;
+  leave_days: number;
+  reason: string;
+  staff_member_id: number;
+  first_name: string;
+  last_name: string;
+  type: string;
+  created_at: Date;
+  updated_at: Date;
+  leave_manager_id: number;
+  type_manager_id: number;
+}
 
+interface DrawerProps {
+  show: boolean;
+  data: RowItem;
+  leave: Array<any>;
+  onToggleDrawer: () => void;
+  reloadTable: () => void;
+}
 
-export default function Drawer({show,data,leave,onToggleDrawer,reloadTable}) {
+interface FormDataType {
+  reasonType: string;
+  reason: string;
+  startDate: Date;
+  endDate: Date | null;
+  leaveManagerId: number;
+}
+
+export default function Drawer({show,data,leave,onToggleDrawer,reloadTable}:DrawerProps) {
+
+  const [open, setOpen] = useState<boolean>(true);
+  const [startDate, setStartDate] = useState<Date>(new Date(data.start_date));
+  const [endDate, setEndDate] = useState<Date>(new Date(data.end_date));
+  const [reasonComment, setReason] = useState<string>(data.reason);
+  const [reasonType, setType] = useState<string>(data.type);
+  const [reasonTypeId, setReasonTypeId] = useState<number>(data.type_manager_id);
+  const [leaveManagerId, setLeaveManagerId] = useState<number>(data.leave_manager_id);
+  const [error, setError] = useState<string>("");
   
-  interface RowItem {
-    start_date: string;
-    end_date: string;
-    leave_days: number;
-    reason: string;
-    staff_member_id: number;
-    first_name: string;
-    last_name: string;
-    type: string;
-    created_at: Date;
-    updated_at: Date;
-    leave_manager_id:number;
-  }
 
-  const [open, setOpen] = useState(true);
-  const [startDate, setStartDate] = useState(new Date(data.start_date));
-  const [endDate, setEndDate] = useState(new Date(data.end_date));
-  const [reasonComment, setReason] = useState(data.reason);
-  const [reasonType, setType] = useState(data.type);
-  const [reasonTypeId, setReasonTypeId] = useState(data.type_manager_id);
-  const [leaveManagerId, setleaveManagerId] = useState(data.leave_manager_id);
-  
-  console.info('reason',reasonComment)
-
-  React.useEffect(() => {
-    setOpen(show)
-   // setStartDate(new Date(data.start_date))
-   // setEndDate(new Date(data.end_date))
-    //setReason(data.reason)
-    //setType(data.type)
+  useEffect(() => {
+    setOpen(show);
   }, [show]);
  
-  const onChange = (dates) => {
+  const onChange = (dates: Array<Date>) => {
     const [start, end] = dates;
     setStartDate(start);
     setEndDate(end);
   };
 
   const closeDrawer = () => {
-    //setReason('');
-    //setType('');
     onToggleDrawer();
-  }
+  };
 
-  interface formDataType {reasonType: string, reason: string, startDate:Date, endDate:Date | null, leaveManagerId:number};
-  const responseBody: formDataType = {reasonType: "", reason: "", startDate: startDate, endDate:endDate, leaveManagerId: leaveManagerId};
-  const [error, setError]: [string, (error: string) => void] = React.useState("");
+  const { register, handleSubmit, formState: { errors } } = useForm<FormDataType>();
 
-  const { register,handleSubmit,formState: { errors } } = useForm<formDataType>();
   const headers = {
-    "x-api-key":'12345678',
+    "x-api-key":import.meta.env.VITE_API_KEY,
     "Content-Type": "application/json"
   };
 
-  const onSubmit: SubmitHandler<formDataType> = (data) => {
+  const onSubmit: SubmitHandler<FormDataType> = (data) => {
     
-    responseBody['reasonType'] = data.reasonType;
-    responseBody['reason'] = data.reason;
-    responseBody['startDate'] = startDate;
-    responseBody['endDate'] = endDate;
-    responseBody['leaveManagerId'] =  leaveManagerId;
+    const responseBody: FormDataType = {
+      reasonType: data.reasonType,
+      reason: data.reason,
+      startDate: startDate,
+      endDate: endDate,
+      leaveManagerId: leaveManagerId
+    };
     
     //Form submission happens here
-    //Form submission happens here
-    axios.put('http://localhost/api/v1/leave', responseBody, { 
+    axios.put(import.meta.env.VITE_BACKEND_API+'v1/leave', responseBody, { 
       headers: headers 
     })
     .then(res=>{
@@ -92,7 +99,7 @@ export default function Drawer({show,data,leave,onToggleDrawer,reloadTable}) {
   
   }
 
-  const processResponse = (response) => {
+  const processResponse = (response: any) => {
 
     if(!response.data.success){
       setError(response.data.error)
@@ -203,6 +210,10 @@ export default function Drawer({show,data,leave,onToggleDrawer,reloadTable}) {
                             selectsRange
                             inline
                             onChange={onChange}
+                            />
+                            <Period 
+                            start={startDate}
+                            end={endDate}
                             />
                           </div>
                         </div>
