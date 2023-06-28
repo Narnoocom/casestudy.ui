@@ -15,21 +15,37 @@ export default function Tablefilters({filterName, filterStartDate, filterEndDate
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [endDate, setEndDate] = useState<Date>(new Date());
 
+    /**
+     * 
+     * Manage the user typing in a name
+     * 
+     * @param event HTMLInputElement
+     */
     const onNameChange = (event: ChangeEvent<HTMLInputElement>) => {
         const { value } = event.target;
         setLastName(value);
         filterName(value)
     };
 
+    /**
+     * 
+     * Manage the start date change and send back to the Datatable component
+     * @param sDate Date
+     */
     const onStartDateChange = (sDate: Date) => {
       setStartDate(sDate);
       filterStartDate(sDate);
     };
 
+    /**
+     * 
+     * Manage the end date change and send back to the Datatable component
+     * @param eDate Date
+     */
     const onEndDateChange = (eDate: Date) => {
       setEndDate(eDate);
       filterEndDate(eDate);
-  };
+    };
     
 
 return (

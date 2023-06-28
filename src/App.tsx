@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import './App.css'
-import Datatable from './components/Datatable'
-import Model from './components/Model'
-import Drawer from './components/Drawer'
+import './App.css';
+import Datatable from './components/Datatable';
+import Model from './components/Model';
+import Drawer from './components/Drawer';
 import axios from 'axios';
 
 interface StaffData {
@@ -86,29 +86,49 @@ function App() {
         });
   }, []);
 
+  /**
+   * Basic function to reload the table data on a change.
+   */
   const reloadTableData = () => {
     setdataReload(true);
   }
 
+  /**
+   * Basic function to open the model.
+   */
   const openModal = () => {
     setIsOpen(true);
     setdataReload(false);
   };
 
+  /**
+   * Basic function to toggle the model closed.
+   * @comment - I could likely combine the openModal and toggleModal.
+   */
   const toggleModal = () => {
     setIsOpen(false);
   }
 
+   /**
+   * Basic function to open the model.
+   */
   const openDrawer = () => {
     setIsOpenDrawer(true);
     setdataReload(false);
   };
 
+   /**
+   * Basic function to toggle the drawer closed.
+   * @comment - I could likely combine the openModal and toggleModal.
+   */
   const toggleDrawer = () => {
     setIsOpenDrawer(false);
     setEditRow(null);
   }
 
+  /**
+   * Basic function to handle when a row is selected.
+   */
   const selectedRow = (r:RowItem) => {
     setEditRow(r);
     openDrawer();

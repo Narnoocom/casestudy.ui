@@ -41,6 +41,11 @@ interface FormDataType {
 
 export default function Drawer({show,data,leave,onToggleDrawer,reloadTable}:DrawerProps) {
 
+
+  /**
+   * Probably need to spend a few more minutes cleaning out these useStates.
+   * Some are legacy from testing the form submit process
+   */
   const [open, setOpen] = useState<boolean>(true);
   const [startDate, setStartDate] = useState<Date>(new Date(data.start_date));
   const [endDate, setEndDate] = useState<Date>(new Date(data.end_date));
@@ -72,6 +77,9 @@ export default function Drawer({show,data,leave,onToggleDrawer,reloadTable}:Draw
     "Content-Type": "application/json"
   };
 
+  /**
+   * Form submit handler.
+   */
   const onSubmit: SubmitHandler<FormDataType> = (data) => {
     
     const responseBody: FormDataType = {
@@ -82,7 +90,9 @@ export default function Drawer({show,data,leave,onToggleDrawer,reloadTable}:Draw
       leaveManagerId: leaveManagerId
     };
     
-    //Form submission happens here
+    /**
+     * Put request to update the database record.
+     */
     axios.put(import.meta.env.VITE_BACKEND_API+'v1/leave', responseBody, { 
       headers: headers 
     })
@@ -99,6 +109,9 @@ export default function Drawer({show,data,leave,onToggleDrawer,reloadTable}:Draw
   
   }
 
+  /**
+   * A basic function to process the response from the API and look for any errors
+   */
   const processResponse = (response: any) => {
 
     if(!response.data.success){

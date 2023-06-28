@@ -7,6 +7,12 @@ import { useForm, SubmitHandler } from "react-hook-form"
 import { XCircleIcon } from '@heroicons/react/20/solid'
 import Period from './Period';
 
+/**
+ * 
+ * @comments: - I would change the staff drop down to a combo box since there could be a lot of staff members to search through.
+ * 
+ */
+
 interface ModelProps {
   show: boolean;
   staff: any[];
@@ -34,13 +40,18 @@ export default function Model({show,staff,leave,onToggleModel,reloadTable}: Mode
 
   
 
-  React.useEffect(() => {
+  useEffect(() => {
     setOpen(show)
   }, [show]);
 
 
   const cancelButtonRef = useRef(null)
 
+  /**
+   * Handler to manage the change of date in the datepicker.
+   * 
+   * @param dates Date
+   */
   const onChange = (dates: [Date, Date] | null) => {
     if (dates) {
       const [start, end] = dates;
@@ -65,6 +76,9 @@ export default function Model({show,staff,leave,onToggleModel,reloadTable}: Mode
 
     const { register, handleSubmit, formState: { errors } } = useForm<FormDataType>();
 
+    /**
+     * Handler to manage the form submission.
+     */
     const onSubmit: SubmitHandler<FormDataType> = (data) => {
       
       responseBody['staffMemberId'] = data.staffMember;
@@ -73,7 +87,9 @@ export default function Model({show,staff,leave,onToggleModel,reloadTable}: Mode
       responseBody['startDate'] = startDate;
       responseBody['endDate'] = endDate;
       
-      //Form submission happens here
+      /**
+       * Post request to update the database record.
+       */
       axios.post(import.meta.env.VITE_BACKEND_API+'v1/leave', responseBody, { 
         headers: headers 
       })
@@ -90,6 +106,9 @@ export default function Model({show,staff,leave,onToggleModel,reloadTable}: Mode
     
     }
 
+    /**
+     * A basic function to process the response from the API and look for any errors
+     */
     const processResponse = (response: any) => {
 
       if(!response.data.success){

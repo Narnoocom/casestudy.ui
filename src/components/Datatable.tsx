@@ -92,9 +92,9 @@ import format from 'date-fns/format';
         useEffect(() => {
             if(reload){
                 axios
-                .get("http://localhost/api/v1/leave", {
+                .get(import.meta.env.VITE_BACKEND_API+"v1/leave", {
                     headers: {
-                      "x-api-key":'12345678',
+                      "x-api-key":import.meta.env.VITE_API_KEY,
                       "Content-Type": "application/json"
                     },
                 })
@@ -113,23 +113,38 @@ import format from 'date-fns/format';
             }
         }, [reload]);
         
-        // Handle the row click
+        /**
+         * 
+         * Handler to manage then a data table row is clicked
+         * 
+         * @param e Date
+         */
         const handleClick = (r:IPost) => {
             clickedData(r);
         };
 
+        /**
+         * 
+         * Basic function to set the name to filter results with
+         * 
+         * @param e string
+         */
         const filterNames = (e:string) => {
             
             if(e.length > 1){
-              
                 setSearchTerm(e);
-                
             }else{
                 setSearchTerm('');
             }
             
         }
 
+        /**
+         * 
+         * Basic function to set the start date to filter results with
+         * 
+         * @param e Date
+         */
         const filterStartDates = (e:Date) => {
             if(e){
                 setSearchStart( format(e,'yyyy-MM-dd') );
@@ -140,6 +155,12 @@ import format from 'date-fns/format';
             
         }
 
+        /**
+         * 
+         * Basic function to set the end date to filter results with
+         * 
+         * @param e Date
+         */
         const filterEndDates = (e:Date) => {
             if(e){
                 setSearchEnd( format(e,'yyyy-MM-dd') );
@@ -159,7 +180,8 @@ import format from 'date-fns/format';
             <DataTable
                 columns={columns}
                 data={posts.filter((item) => {
-
+                    // This is ugly I would spend more time to bring the filter back into a function
+                    // which would return the posts data.
                     if (searchTerm === "" && searchStart === "" && searchEnd === "" ) {
                       return item;
                     } else if (searchTerm && searchStart === "" && searchEnd === "" ) {
